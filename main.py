@@ -61,6 +61,11 @@ print(list_250)
 # links = table.find_all("a")
 # # tonight = forecast_items[0]
 # print(links)
+title_of_movie = []
+rating_of_movie = []
+duration_of_movie = []
+date_of_movie = []
+summary_of_movie = []
 
 for link in list_250:
     myurl = link
@@ -72,16 +77,34 @@ for link in list_250:
     # Parse the html
     soup = BeautifulSoup(html_content, 'html.parser')
     # print(soup.prettify)
-    divs = soup.find_all('div', attrs={'class':'title_block'})
-    print(divs)
+    divs = soup.find('div', attrs={'class':'title_block'})
+    # print(divs)
     # div = soup.find_all('div', attrs={'class':'ratingValue'})
     # print(div)
+    movie_name = divs.h1.text
+    print(movie_name)
+    movie_rating = divs.strong.span.text
+    print(movie_rating)
+    movie_duration = divs.time.text.strip()
+    print(movie_duration)
+    # movie_release_date = divs.div.a.text
+    # print(movie_release_date)
+    movie_release_date = soup.find('a', attrs={'title':'See more release dates'}).text
+    movie_desc = soup.find('div', attrs={'class':'summary_text'}).text.strip()
+    removing = movie_release_date.find('(')
+    movie_release_date = movie_release_date[:removing].strip()
+    print(movie_release_date)
+    # print(removing)
+    print(movie_desc)
+    title_of_movie.append(movie_name)
+    rating_of_movie.append(movie_rating)
+    duration_of_movie.append(movie_duration)
+    date_of_movie.append(movie_release_date)
+    summary_of_movie.append(movie_desc)
 
 
-    # wrapper = soup.find_all('div', attrs={'class':'title_wrapper'}).get_text()
-    # name = divs.find(class_="ratingValue")
-    # print(wrapper)
-    # headings = soup.findAll("h1", {"class": "headingfour"})
-    # print(headings)
-
-
+    print(title_of_movie)
+    print(rating_of_movie)
+    print(duration_of_movie)
+    print(date_of_movie)
+    print(summary_of_movie)
