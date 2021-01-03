@@ -1,5 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
+from scraper.models import Movie
+import json
 
 
 url = "https://www.imdb.com/chart/top?ref_=nv_mv_250"
@@ -92,7 +94,7 @@ for link in list_250:
     movie_release_date = soup.find('a', attrs={'title':'See more release dates'}).text
     movie_desc = soup.find('div', attrs={'class':'summary_text'}).text.strip()
     removing = movie_release_date.find('(')
-    movie_release_date = movie_release_date[:removing].strip()
+    movie_release_date = movie_release_date[:removing].strip(t )
     print(movie_release_date)
     # print(removing)
     print(movie_desc)
@@ -108,3 +110,13 @@ for link in list_250:
     print(duration_of_movie)
     print(date_of_movie)
     print(summary_of_movie)
+
+
+allMovies = Movie()
+for i in range(len(list_250)):
+    allMovies.title = json.dumps(title_of_movie)
+    allMovies.ratings = json.dumps(rating_of_movie)
+    allMovies.duration = json.dumps(duration_of_movie)
+    allMovies.release_date = json.dumps(date_of_movie)
+    allMovies.description = json.dumps(summary_of_movie)
+    allMovies.save()
