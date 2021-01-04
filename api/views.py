@@ -1,5 +1,5 @@
+from django.db.models import Q
 from django.shortcuts import render
-from rest_framework import viewsets
 from rest_framework import permissions, response
 from scraper.models import Movie
 from .serializers import MovieSerializer
@@ -8,8 +8,9 @@ from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view
-from rest_framework.pagination import PageNumberPagination, CursorPagination
-from django.core.paginator import Paginator
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .pagination import MyPagination
 
 
 
@@ -26,55 +27,35 @@ def apiOverview(request):
     return Response(api_urls)
 
 
-class MyPagination(CursorPagination):
-    page_size = 10
-
-
-
-
-class MovieList(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [SessionAuthentication]
+class MovieListApiView(ListAPIView):
+    # queryset = Movie.objects.all()
+    serializer_class = MovieSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['title', 'ratings', 'release_date', 'duration', 'description']
     pagination_class = MyPagination
-
-    def get(self, request, format=None):
-        movies = Movie.objects.all()
-        serializer = MovieSerializer(movies, many=True)
-
-        return Response(serializer.data)
-
-    # def post(self, request, format=None):
-    #     serializer = MovieSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class MovieDetail(APIView):
-
     permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication]
 
-    def get_object(self, pk):
-        try:
-            return Movie.objects.get(pk=pk)
-        except Movie.DoesNotExist:
-            raise Http404
+    def get_queryset(self, *args, **kwargs):
+        queryset_list = Movie.objects.all()
+        query = self.request.GET.get("q")
+        if query:
+            queryset_list = queryset_list.filter(
+                Q(title__icontains=query)|
+                Q(ratings__icontains=query)|
+                Q(release_date__icontains=query)|
+                Q(duration__icontains=query)|
+                Q(description__icontains=query)
 
-    def get(self, request, pk, format=None):
-        movie = self.get_object(pk)
-        serializer = MovieSerializer(movie)
-        return Response(serializer.data)
+            )
+        return queryset_list
+    
 
-    # def put(self, request, pk, format=None):
-    #     movie = self.get_object(pk)
-    #     serializer = MovieSerializer(movie, data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # def delete(self, request, pk, format=None):
-    #     movie = self.get_object(pk)
-    #     movie.delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+class MovieDetailApiView(RetrieveAPIView):
+    queryset = Movie.objects.all()
+    serializer_class = MovieSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication]
+
+
